@@ -11,10 +11,10 @@ export const getAllUsers = async (req: Request, res: Response) => {
         }
 
         res.status(200).json(users);
-    } catch (error: unknown) {
+    } catch (error) {
         res.status(500).json({
-            message: 'Server error',
-            error: error instanceof Error ? error.message : String(error),
+            message: 'Server error while fetching users',
+            error: error instanceof Error ? error.message : 'Unknown error',
         });
     }
 };
@@ -22,17 +22,23 @@ export const getAllUsers = async (req: Request, res: Response) => {
 // Get user by id
 export const getUserById = async (req: Request, res: Response) => {
     try {
-        const user = await User.findById(req.params.id);
+        const userId = req.params.id;
+        
+        if (!userId) {
+            return res.status(400).json({ message: 'User ID is required' });
+        }
+
+        const user = await User.findById(userId);
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
         res.status(200).json(user);
-    } catch (error: unknown) {
+    } catch (error) {
         res.status(500).json({
-            message: 'Server error',
-            error: error instanceof Error ? error.message : String(error),
+            message: 'Server error while fetching the user',
+            error: error instanceof Error ? error.message : 'Unknown error',
         });
     }
 };
@@ -40,12 +46,28 @@ export const getUserById = async (req: Request, res: Response) => {
 // Update user
 export const updateUser = async (req: Request, res: Response) => {
     try {
-        const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const userId = req.params.id;
+        const updateData = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ message: 'User ID is required' });
+        }
+
+        if (!updateData || Object.keys(updateData).length === 0) {
+            return res.status(400).json({ message: 'Update data is required' });
+        }
+
+        const user = await User.findByIdAndUpdate(userId, updateData, { new: true });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found or update failed' });
+        }
+
         res.status(200).json(user);
-    } catch (error: unknown) {
+    } catch (error) {
         res.status(500).json({
-            message: 'Server error',
-            error: error instanceof Error ? error.message : String(error),
+            message: 'Server error while updating the user',
+            error: error instanceof Error ? error.message : 'Unknown error',
         });
     }
 };
@@ -53,12 +75,23 @@ export const updateUser = async (req: Request, res: Response) => {
 // Delete user
 export const deleteUser = async (req: Request, res: Response) => {
     try {
-        await User.findByIdAndDelete(req.params.id);
-        res.status(200).json({ message: 'User deleted' });
-    } catch (error: unknown) {
+        const userId = req.params.id;
+
+        if (!userId) {
+            return res.status(400).json({ message: 'User ID is required' });
+        }
+
+        const user = await User.findByIdAndDelete(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found or already deleted' });
+        }
+
+        res.status(200).json({ message: 'User deleted successfully' });
+    } catch (error) {
         res.status(500).json({
-            message: 'Server error',
-            error: error instanceof Error ? error.message : String(error),
+            message: 'Server error while deleting the user',
+            error: error instanceof Error ? error.message : 'Unknown error',
         });
     }
 };
