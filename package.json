@@ -7,7 +7,8 @@
     "start": "node dist/server.js",
     "dev": "ts-node src/server.ts",
     "dev:watch": "nodemon --watch 'src/**/*.ts' src/server.ts",
-    "test": "jest --watchAll"
+    "test": "jest --watchAll",
+    "test:open": "jest --watchAll --runInBand --detectOpenHandles"
   },
   "keywords": [],
   "author": "",

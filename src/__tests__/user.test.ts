@@ -60,11 +60,62 @@ describe("Users API Testing", () => {
       expect(response.body).toHaveProperty("name");
     });
 
+    it("should return a 400 if user ID is invalid", async () => {
+      // use an invalid _id to get single user
+      const response = await supertest(app).get(`/users/invalid`);
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty("message", "User ID is not valid! Please enter a valid user id");
+    })
+
     it("should return a 404 if user is not found", async () => {
       // use an invalid _id to get single user
       const response = await supertest(app).get(`/users/${new mongoose.Types.ObjectId()}`);
-      console.log(response.body);
+      // console.log(response.body);
       expect(response.status).toBe(404);
+    });
+  });
+
+  describe("PUT /users/:id update user", () => {
+    it("should update a user", async () => {
+      const response = await supertest(app).put(`/users/${users[0]._id}`).send({ name: "Updated User" });
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("name", "Updated User");
+    });
+
+    it("should return a 400 if user ID is invalid", async () => {
+      // use an invalid _id to get single user
+      const response = await supertest(app).put(`/users/invalid`).send({ name: "Updated User" });
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty("message", "User ID is not valid! Please enter a valid user id");
+    });
+
+    it("should return a 401 if update data is not provided", async () => {
+      // use and empty object to get single user
+      const response = await supertest(app).put(`/users/${users[0]._id}`).send({});
+      expect(response.status).toBe(401);
+      expect(response.body).toHaveProperty("message", "Update data is required");
+    });
+
+    it("should return a 402 if userId is not provided", async () => {
+      // use only / to get single user
+      const response = await supertest(app).put(`/users/`).send({ name: "Updated User" });
+      expect(response.status).toBe(402);
+      expect(response.body).toHaveProperty("message", "User ID is required");
+    })
+
+    it("should return a 404 if user is not found", async () => {
+      // use an unavailable _id to get single user
+      const response = await supertest(app).put(`/users/${new mongoose.Types.ObjectId()}`).send({ name: "Updated User" });
+      expect(response.status).toBe(404);
+      expect(response.body).toHaveProperty("message", "User not found or update failed");
+    });
+    
+    it("should return a 500 if there is an error", async () => {
+      // Mock the User model to throw an error
+      jest.spyOn(User, "findByIdAndUpdate").mockRejectedValue(new Error("Database error"));
+      const response = await supertest(app).put(`/users/${users[0]._id}`).send({ name: "Updated User" });
+      expect(response.status).toBe(500);
+      expect(response.body).toHaveProperty("message", "Server error while updating the user");
     });
   })
 });

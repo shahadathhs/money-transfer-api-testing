@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import User from '../models/user.model';
+import { Document, isValidObjectId, Types } from 'mongoose';
 
 // Get all users
 export const getAllUsers = async (req: Request, res: Response) => {
@@ -24,8 +25,15 @@ export const getUserById = async (req: Request, res: Response) => {
     try {
         const userId = req.params.id;
         
-        if (!userId) {
-            return res.status(400).json({ message: 'User ID is required' });
+        // if (!userId) {
+        //     return res.status(400).json({ message: 'User ID is required' });
+        // }
+        // if there is no id it will hit get all users api
+
+        if(!isValidObjectId(userId)){
+            return res.status(400).json({ 
+                message: 'User ID is not valid! Please enter a valid user id' 
+            });
         }
 
         const user = await User.findById(userId);
@@ -49,15 +57,17 @@ export const updateUser = async (req: Request, res: Response) => {
         const userId = req.params.id;
         const updateData = req.body;
 
-        if (!userId) {
-            return res.status(400).json({ message: 'User ID is required' });
+        if(!isValidObjectId(userId)){
+            return res.status(400).json({
+                message: 'User ID is not valid! Please enter a valid user id'
+            });
         }
 
         if (!updateData || Object.keys(updateData).length === 0) {
-            return res.status(400).json({ message: 'Update data is required' });
+            return res.status(401).json({ message: 'Update data is required' });
         }
 
-        const user = await User.findByIdAndUpdate(userId, updateData, { new: true });
+        const user = await User.findByIdAndUpdate(userId, updateData, { new: true })
 
         if (!user) {
             return res.status(404).json({ message: 'User not found or update failed' });
