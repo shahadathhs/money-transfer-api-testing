@@ -9,8 +9,8 @@ const app = express();
 app.use(express.json());
 
 app.use('/users', userRoutes);
-app.use('/cashout', cashOutRoutes);
-app.use('/cashin', cashInRoutes);
-app.use('/sendmoney', sendMoneyRoutes);
+app.use('/cashouts', cashOutRoutes);
+app.use('/cashins', cashInRoutes);
+app.use('/sendmoneys', sendMoneyRoutes);
 
 export default app;
