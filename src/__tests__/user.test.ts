@@ -15,16 +15,19 @@ afterAll(async () => {
 
 describe("Users API Testing", () => {
   // to do post and update tests
+  const getRandomString = (length: number) => Math.random().toString(36).substring(2, 2 + length);
+  const getRandomEmail = () => `${getRandomString(6)}@${['example.com', 'test.com', 'sample.org'][Math.floor(Math.random() * 3)]}`;
+  
   const userPayload = {
-    _id: new mongoose.Types.ObjectId(),
-    name: "Test User",
-    pin: "1234",
-    phone: "1234567890",
-    email: "Jpj9K@example.com",
-    role: "user",
-    statusOfUser: "pending",
-    balance: 0,
-  }
+      _id: new mongoose.Types.ObjectId(),
+      name: getRandomString(10),
+      pin: "1234",
+      phone: "1234567890",
+      email: getRandomEmail(),
+      role: "user",
+      statusOfUser: "pending",
+      balance: 0
+  };
 
   // to store user data to use later in single user get test
   let users: { _id: any; }[];
@@ -52,7 +55,7 @@ describe("Users API Testing", () => {
     });
   });
 
-  describe("Get /users/:id single user", () => {
+  describe("GET /users/:id single user", () => {
     it("should return a user by ID", async () => {
       // use _id from users array to get single user
       const response = await supertest(app).get(`/users/${users[0]._id}`);
@@ -72,6 +75,27 @@ describe("Users API Testing", () => {
       const response = await supertest(app).get(`/users/${new mongoose.Types.ObjectId()}`);
       // console.log(response.body);
       expect(response.status).toBe(404);
+    });
+  });
+
+  describe("POST /users create user", () => {
+    it("should create a new user", async () => {
+      const response = await supertest(app).post("/users").send(userPayload);
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty("name", userPayload.name);
+    });
+
+    it("should return a 400 if user data is not provided", async () => {
+      const response = await supertest(app).post("/users").send({});
+      expect(response.status).toBe(401);
+      expect(response.body).toHaveProperty("message", "User data is required");
+    });
+
+    it("should return a 500 if there is an error", async () => {
+      // Mock the User model to throw an error
+      jest.spyOn(User, "create").mockRejectedValue(new Error("Database error"));
+      const response = await supertest(app).post("/users").send(userPayload);
+      expect(response.status).toBe(500);
     });
   });
 

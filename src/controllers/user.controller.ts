@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import User from '../models/user.model';
-import { Document, isValidObjectId, Types } from 'mongoose';
+import { isValidObjectId } from 'mongoose';
 
 // Get all users
 export const getAllUsers = async (req: Request, res: Response) => {
@@ -51,6 +51,25 @@ export const getUserById = async (req: Request, res: Response) => {
     }
 };
 
+// create user
+export const createUser = async (req: Request, res: Response) => {
+    try {
+        const userData = req.body;
+        if (!userData || Object.keys(userData).length === 0) {
+            return res.status(401).json({ message: 'User data is required' });
+        }
+
+        const user = new User(userData);
+        await user.save();
+        res.status(201).json(user);
+    } catch (error) {
+        res.status(500).json({
+            message: 'Server error while creating the user',
+            error: error instanceof Error ? error.message : 'Unknown error',
+        });
+    }
+};
+
 // Update user
 export const updateUser = async (req: Request, res: Response) => {
     try {
@@ -87,8 +106,10 @@ export const deleteUser = async (req: Request, res: Response) => {
     try {
         const userId = req.params.id;
 
-        if (!userId) {
-            return res.status(400).json({ message: 'User ID is required' });
+        if(!isValidObjectId(userId)){
+            return res.status(400).json({
+                message: 'User ID is not valid! Please enter a valid user id'
+            });
         }
 
         const user = await User.findByIdAndDelete(userId);
