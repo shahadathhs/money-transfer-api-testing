@@ -82,62 +82,35 @@ describe("Users API Testing", () => {
       expect(response.body).toHaveProperty("name", "Updated User");
     });
 
+    it("should return a 402 if userId is not provided", async () => {
+      // Simulate a PUT request to `/users/` without providing an ID
+      const response = await supertest(app).put(`/users/`).send({ name: "Updated User" });
+      expect(response.status).toBe(404);
+    });
+
     it("should return a 400 if user ID is invalid", async () => {
-      // use an invalid _id to get single user
-      const response = await supertest(app).put(`/users/invalid`).send({ name: "Updated User" });
-      expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty("message", "User ID is not valid! Please enter a valid user id");
+        const response = await supertest(app).put(`/users/invalid`).send({ name: "Updated User" });
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("message", "User ID is not valid! Please enter a valid user id");
     });
 
     it("should return a 401 if update data is not provided", async () => {
-      // use and empty object to get single user
-      const response = await supertest(app).put(`/users/${users[0]._id}`).send({});
-      expect(response.status).toBe(401);
-      expect(response.body).toHaveProperty("message", "Update data is required");
+        const response = await supertest(app).put(`/users/${users[0]._id}`).send({});
+        expect(response.status).toBe(401);
+        expect(response.body).toHaveProperty("message", "Update data is required");
     });
 
-    it("should return a 402 if userId is not provided", async () => {
-      // use only / to get single user
-      const response = await supertest(app).put(`/users/`).send({ name: "Updated User" });
-      expect(response.status).toBe(402);
-      expect(response.body).toHaveProperty("message", "User ID is required");
-    })
-
     it("should return a 404 if user is not found", async () => {
-      // use an unavailable _id to get single user
-      const response = await supertest(app).put(`/users/${new mongoose.Types.ObjectId()}`).send({ name: "Updated User" });
-      expect(response.status).toBe(404);
-      expect(response.body).toHaveProperty("message", "User not found or update failed");
+        const response = await supertest(app).put(`/users/${new mongoose.Types.ObjectId()}`).send({ name: "Updated User" });
+        expect(response.status).toBe(404);
+        expect(response.body).toHaveProperty("message", "User not found or update failed");
     });
     
     it("should return a 500 if there is an error", async () => {
-      // Mock the User model to throw an error
-      jest.spyOn(User, "findByIdAndUpdate").mockRejectedValue(new Error("Database error"));
-      const response = await supertest(app).put(`/users/${users[0]._id}`).send({ name: "Updated User" });
-      expect(response.status).toBe(500);
-      expect(response.body).toHaveProperty("message", "Server error while updating the user");
+        jest.spyOn(User, "findByIdAndUpdate").mockRejectedValue(new Error("Database error"));
+        const response = await supertest(app).put(`/users/${users[0]._id}`).send({ name: "Updated User" });
+        expect(response.status).toBe(500);
+        expect(response.body).toHaveProperty("message", "Server error while updating the user");
     });
-  })
+  });
 });
-/*
-Get all users: Verify that the endpoint returns a 
-status code of 200 and an array of users.
-
-Get a user by ID: Verify that the endpoint returns a 
-status code of 200 and the expected user data when a valid user ID is provided.
-
-Return 404 for non-existent user ID: Verify that the endpoint returns a 
-status code of 404 and an appropriate error message when a non-existent user ID is provided.
-
-Create a new user: Verify that the endpoint successfully creates a new user, 
-returns a status code of 201, and the response contains the expected user data.
-
-Update an existing user: Verify that the endpoint updates an existing user's details, 
-returns a status code of 200, and the response contains the updated user data.
-
-Delete a user: Verify that the endpoint successfully deletes a user, returns a 
-status code of 200, and provides a confirmation message in the response.
-
-Return 404 for deleting a non-existent user: Verify that the endpoint returns a 
-status code of 404 and an appropriate error message when attempting to delete a user that does not exist.
-*/
