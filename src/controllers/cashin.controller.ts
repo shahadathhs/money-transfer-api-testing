@@ -47,10 +47,13 @@ export const createCashIn = async (req: Request, res: Response) => {
     }
 
     const cashin = new CashIn({ amount, agentId, requesterId });
+    if (!cashin) {
+      return res.status(400).json({ message: 'Cashin request not created' });
+    }
     await cashin.save();
     res.status(201).json(cashin);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: 'Server error while creating cashin', error });
   }
 };
 
@@ -58,19 +61,33 @@ export const updateCashInStatus = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
+
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({
+        message: 'Cashin ID is not valid! Please enter a valid cashin id'
+      });
+    }
+
     const cashin = await CashIn.findByIdAndUpdate(id, { status }, { new: true });
     if (!cashin) {
       return res.status(404).json({ message: 'Cashin request not found' });
     }
     res.status(200).json(cashin);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error });
+    res.status(500).json({ message: 'Server error while updating cashin', error });
   }
 };
 
 export const deleteCashIn = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+
+    if (!isValidObjectId(id)) { 
+      return res.status(400).json({
+        message: 'Cashin ID is not valid! Please enter a valid cashin id'
+      });
+    }
+
     const cashin = await CashIn.findByIdAndDelete(id);
     if (!cashin) {
       return res.status(404).json({ message: 'Cashin request not found' });
