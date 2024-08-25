@@ -137,4 +137,37 @@ describe("Users API Testing", () => {
         expect(response.body).toHaveProperty("message", "Server error while updating the user");
     });
   });
+
+  describe("DELETE /users/:id delete user", () => {
+    it("should delete a user", async () => {
+      const response = await supertest(app).delete(`/users/${users[users.length - 1]._id}`);
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("message", "User deleted successfully");
+    });
+
+    it("should return a 404 if userId is not provided", async () => {
+      // Simulate a DELETE request to `/users/` without providing an ID
+      const response = await supertest(app).delete(`/users/`);
+      expect(response.status).toBe(404);
+    });
+
+    it("should return a 400 if user ID is invalid", async () => {
+        const response = await supertest(app).delete(`/users/invalid`);
+        expect(response.status).toBe(400);
+        expect(response.body).toHaveProperty("message", "User ID is not valid! Please enter a valid user id");
+    });
+
+    it("should return a 404 if user is not found", async () => {
+        const response = await supertest(app).delete(`/users/${new mongoose.Types.ObjectId()}`);
+        expect(response.status).toBe(404);
+        expect(response.body).toHaveProperty("message", "User not found or already deleted");
+    });
+    
+    it("should return a 500 if there is an error", async () => {
+        jest.spyOn(User, "findByIdAndDelete").mockRejectedValue(new Error("Database error"));
+        const response = await supertest(app).delete(`/users/${users[users.length - 1]._id}`);
+        expect(response.status).toBe(500);
+        expect(response.body).toHaveProperty("message", "Server error while deleting the user");
+    });
+  });
 });
